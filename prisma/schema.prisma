@@ -43,9 +43,9 @@ model User {
   emailVerified      DateTime?
   image              String?
   stravaAuthorized   Boolean?  @default(false)
-  StravaRefreshToken String?
-  StravaAccessToken  String?
-  StravaExpiresAt    Int?
+  stravaRefreshToken String?
+  stravaAccessToken  String?
+  stravaExpiresAt    Int?
   accounts           Account[]
   sessions           Session[]
 }
