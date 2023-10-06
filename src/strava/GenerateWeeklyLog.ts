@@ -1,6 +1,7 @@
 import { User } from "@prisma/client";
 import { fetchRecentActivities } from "./fetchActivities";
 import { formatPace } from "./formatUtils";
+import { checkAndRefreshStravaAuth } from "./AuthFunctions";
 
 export type StravaActivityRaw = {
   id: number;
@@ -65,6 +66,7 @@ const calcTotalMileage = (activities: StravaActivity[]): number => {
 
 // Monday - 11mi @7:30/mi
 export const generateWeeklyLog = async (user: User) => {
+  await checkAndRefreshStravaAuth(user);
   let activities = await fetchRecentActivities(user, 7);
   let activityToday = false;
   const totalMileage = Math.round(calcTotalMileage(activities) / 1609);
