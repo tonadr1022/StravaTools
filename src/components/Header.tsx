@@ -22,16 +22,18 @@ const Header = async (props: Props) => {
   }
   return (
     <div className="w-full h-20 bg-base-100 fixed flex items-center p-4 shadow-2xl">
-      <Link className="text-accent text-4xl flex-1" href="/">
+      <Link className="text-accent text-3xl md:text-4xl flex-1" href="/">
         StravaTools
       </Link>
       {user ? (
-        <div className="flex gap-4">
-          <Link className=" btn btn-outline rounded-full" href="/settings">
-            <IoSettingsSharp className="w-5 h-5" />
-          </Link>
-          <LogoutButton />
-        </div>
+        <>
+          <div className="flex gap-4">
+            <Link className=" btn btn-outline rounded-full" href="/settings">
+              <IoSettingsSharp className="w-5 h-5" />
+            </Link>
+            <LogoutButton />
+          </div>
+        </>
       ) : (
         <SignInButton />
       )}

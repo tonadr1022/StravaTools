@@ -13,3 +13,12 @@ export type StravaActivity = StravaActivityRaw & {
   date: Date;
   formattedPace: string;
 };
+
+export type SettingsFields = {
+  id: string;
+  emailRecipients: string[];
+  emailSubject: string;
+  includeDateInSubject: boolean;
+  decimalsToRoundMiles: number;
+  mileageRoundThreshold: number;
+};

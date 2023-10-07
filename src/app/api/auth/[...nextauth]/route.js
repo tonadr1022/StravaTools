@@ -11,10 +11,30 @@ export const authOptions = {
   ],
   callbacks: {
     session: async ({ session, user }) => {
+      console.log("session callback", user);
       if (session?.user) {
         session.user.id = user.id;
       }
+      const existingSettings = await prisma.settings.findUnique({
+        where: { userId: user.id },
+      });
+      if (!existingSettings) {
+        const lastName = user.name.split(" ").pop();
+        await prisma.settings.create({
+          data: {
+            userId: user.id,
+            emailRecipients: [],
+            emailSubject: `${lastName} Training Log - `,
+            includeDateInSubject: true,
+            decimalsToRoundMiles: 0,
+            mileageRoundThreshold: 0.5,
+          },
+        });
+      }
       return session;
+    },
+    jwt: async ({ token, user }) => {
+      console.log("jwt callback", user);
     },
   },
   adapter: PrismaAdapter(prisma),

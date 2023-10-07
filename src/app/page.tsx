@@ -35,9 +35,9 @@ export default async function Home() {
           </>
         )}
         {user && user?.stravaAuthorized && (
-          <div className="flex flex-col gap-6 min-w-full justify-ceter place-items-center">
+          <div className="flex flex-col gap-6 items-center">
             <GenerateLogModule user={user!} />
-            <button className="btn btn-outline btn-accent">
+            <button className="btn btn-outline btn-accent w-56">
               Generate Activities CSV
             </button>
             <StravaButton />

@@ -43,7 +43,9 @@ const GenerateLogModule = ({ user }: Props) => {
   };
   return (
     <>
-      <Button className="btn-outline btn-accent" onClick={handleLogGeneration}>
+      <Button
+        className="btn-outline btn-accent w-56"
+        onClick={handleLogGeneration}>
         Generate Weekly Log
       </Button>
       {logLoading && (

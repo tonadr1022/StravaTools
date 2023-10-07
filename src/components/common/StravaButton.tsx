@@ -10,8 +10,8 @@ const StravaButton = (props: Props) => {
       onClick={() =>
         (window.location.href = "https://www.strava.com/dashboard")
       }
-      className="btn-outline">
-      Strava Dashboard
+      className="btn-outline w-56">
+      Strava
       <Image
         src="/strava_logo_2.svg"
         alt="Strava Logo"
@@ -19,18 +19,6 @@ const StravaButton = (props: Props) => {
         height={24}
       />
     </Button>
-    // <button
-    //   onClick={() =>
-    //     (window.location.href = "https://www.strava.com/dashboard")
-    //   }
-    //   className="bg-white rounded-lg p-2 max-w-fit">
-    //   <Image
-    //     src="/strava_logo.svg"
-    //     alt="Strava Logo"
-    //     width={200}
-    //     height={300}
-    //   />
-    // </button>
   );
 };
 

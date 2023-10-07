@@ -48,6 +48,7 @@ model User {
   stravaExpiresAt    Int?
   accounts           Account[]
   sessions           Session[]
+  settings           Settings?
 }
 
 model VerificationToken {
@@ -56,4 +57,17 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Settings {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailRecipients       String[]
+  emailSubject          String
+  includeDateInSubject  Boolean
+  decimalsToRoundMiles  Int      @default(0)
+  mileageRoundThreshold Decimal  @default(0.5)
 }
