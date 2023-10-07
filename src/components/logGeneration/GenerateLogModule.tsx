@@ -43,20 +43,28 @@ const GenerateLogModule = ({ user }: Props) => {
   };
   return (
     <>
-      <Button onClick={handleLogGeneration}>Generate Weekly Log</Button>
+      <Button className="btn-outline btn-accent" onClick={handleLogGeneration}>
+        Generate Weekly Log
+      </Button>
       {logLoading && (
         <span className="loading loading-spinner loading-lg self-center"></span>
       )}
       {log && (
         <div className="flex flex-col gap-8 items-center">
           <div className="flex gap-4">
-            <Button className="rounded-full px-2" onClick={handleCopy}>
+            <Button
+              className="btn-outline rounded-full px-2"
+              onClick={handleCopy}>
               <AiOutlineCopy className="w-8 h-8" />
             </Button>
-            <Button className="rounded-full px-2" onClick={handleClear}>
+            <Button
+              className="btn-outline rounded-full px-2"
+              onClick={handleClear}>
               <ImCancelCircle className="w-8 h-8" />
             </Button>
-            <Button className="rounded-full px-2" onClick={sendEmail}>
+            <Button
+              className="btn-outline rounded-full px-2"
+              onClick={sendEmail}>
               <AiOutlineMail className="w-8 h-8" />
             </Button>
           </div>

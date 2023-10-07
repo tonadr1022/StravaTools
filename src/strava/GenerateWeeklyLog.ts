@@ -1,7 +1,7 @@
 import { User } from "@prisma/client";
 import { fetchRecentActivities } from "./fetchActivities";
 import { formatPace } from "./formatUtils";
-import { checkAndRefreshStravaAuth } from "./AuthFunctions";
+// import { checkAndRefreshStravaAuth } from "./AuthFunctions";
 import { StravaActivity, StravaActivityRaw } from "@/utils/types";
 import { subtractDays } from "@/utils/dateTimeUtils";
 
@@ -92,7 +92,7 @@ const getOrderOfDays = (isAnActivityToday: boolean): number[] => {
 };
 
 export const generateWeeklyLog = async (user: User) => {
-  await checkAndRefreshStravaAuth(user);
+  // await checkAndRefreshStravaAuth(user);
   let activities = await fetchRecentActivities(user, 7);
   if (!activities) return "No activities found";
   const isAnActivityToday = getIsAnActivityToday(activities);
