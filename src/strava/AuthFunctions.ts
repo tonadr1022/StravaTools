@@ -1,6 +1,6 @@
 import { User } from "@prisma/client";
-import prisma from "../../prisma/db";
-
+// import prisma from "../../prisma/db";
+import { prisma } from "../../prisma/db";
 export const handleAuthRedirect = (user_id: string) => {
   const params = new URLSearchParams({
     client_id: process.env.NEXT_PUBLIC_STRAVA_CLIENT_ID as string,
@@ -15,10 +15,22 @@ export const handleAuthRedirect = (user_id: string) => {
 };
 
 export const checkAndRefreshStravaAuth = async (user: User) => {
-  if (!user.stravaAuthorized)
+  console.log("checking refresh auth");
+  if (
+    !user.stravaAuthorized ||
+    !user.stravaExpiresAt ||
+    !user.stravaRefreshToken
+  )
     throw new Error("User not authorized with Strava");
-  if (new Date(user.stravaExpiresAt!) > new Date()) return true;
+  // console.log(
+  //   user.stravaExpiresAt,
+  //   new Date(user.stravaExpiresAt * 1000),
+  //   new Date()
+  // );
+  // console.log(new Date(user.stravaExpiresAt * 1000) > new Date());
+  if (new Date(user.stravaExpiresAt * 1000) > new Date()) return;
   try {
+    console.log("refreshing auth");
     await refreshAuth(user);
   } catch (e) {
     console.error(e);
@@ -28,18 +40,21 @@ export const checkAndRefreshStravaAuth = async (user: User) => {
 const refreshAuth = async (user: User) => {
   const client_id = process.env.NEXT_PUBLIC_STRAVA_CLIENT_ID!;
   const client_secret = process.env.STRAVA_CLIENT_SECRET!;
+
   const authResponse = await fetch(
     `https://www.strava.com/api/v3/oauth/token?client_id=${client_id}&client_secret=${client_secret}&refresh_token=${user.stravaRefreshToken}&grant_type=refresh_token`,
     {
       method: "POST",
     }
   );
+
   if (!authResponse.ok) {
     throw new Error("Failed to refresh Strava auth");
   }
+
   const authData = await authResponse.json();
   const { expires_at, refresh_token, access_token } = authData;
-  await prisma.user.update({
+  const updatedUser = await prisma.user.update({
     where: { id: user.id },
     data: {
       stravaRefreshToken: refresh_token,
@@ -47,4 +62,5 @@ const refreshAuth = async (user: User) => {
       stravaExpiresAt: expires_at,
     },
   });
+  console.log(updatedUser);
 };

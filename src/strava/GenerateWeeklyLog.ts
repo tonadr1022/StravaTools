@@ -2,31 +2,8 @@ import { User } from "@prisma/client";
 import { fetchRecentActivities } from "./fetchActivities";
 import { formatPace } from "./formatUtils";
 import { checkAndRefreshStravaAuth } from "./AuthFunctions";
-
-export type StravaActivityRaw = {
-  id: number;
-  name: string;
-  distance: number;
-  moving_time: number;
-  average_speed: number;
-  type: string;
-  start_date: string;
-};
-
-export type StravaActivity = StravaActivityRaw & {
-  duration: number;
-  date: Date;
-  day: number;
-  formattedPace: string;
-};
-
-export type LogEntry = {
-  day: string;
-  totalDistance: number;
-  totalDuration: number;
-  averagePace: number;
-  activities: StravaActivity[];
-};
+import { StravaActivity, StravaActivityRaw } from "@/utils/types";
+import { subtractDays } from "@/utils/dateTimeUtils";
 
 const weekdays: Record<number, string> = {
   0: "Sunday",
@@ -64,12 +41,66 @@ const calcTotalMileage = (activities: StravaActivity[]): number => {
   return activities.reduce((acc, curr) => acc + curr.distance, 0);
 };
 
-// Monday - 11mi @7:30/mi
+const getIsAnActivityToday = (activities: StravaActivity[]) => {
+  return (
+    new Date(activities[activities.length - 1].start_date).getDate() ===
+    new Date().getDate()
+  );
+};
+
+const filterActivitiesToFormat = (
+  activities: StravaActivity[],
+  activityToday: boolean
+) => {
+  activities = activities.filter(
+    (a: StravaActivityRaw) => a.sport_type === "Run"
+  );
+
+  const dateSevenDaysAgo = subtractDays(new Date(), 7).getDate();
+  // if an activity occurred today, filter out the activities
+  // that occurred on the same day last week
+  if (activityToday) {
+    activities = activities.filter((a: StravaActivityRaw) => {
+      return new Date(a.start_date).getDate() !== dateSevenDaysAgo;
+    });
+  }
+  return activities;
+};
+
+const formatActivity = (activity: StravaActivityRaw): StravaActivity => {
+  const activityDate = new Date(activity.start_date);
+  return {
+    ...activity,
+    date: activityDate,
+    distance: activity.distance / 1609,
+    duration: activity.moving_time / 60,
+    average_speed: 26.8224 / activity.average_speed,
+    formattedPace: formatPace(26.8224 / activity.average_speed),
+  };
+};
+
+const getOrderOfDays = (isAnActivityToday: boolean): number[] => {
+  let initialDay = new Date().getDay();
+  if (isAnActivityToday) {
+    ++initialDay;
+  }
+  const orderOfDays = [];
+  for (let i = 0; i < 7; i++) {
+    orderOfDays.push((i + initialDay) % 7);
+  }
+  return orderOfDays;
+};
+
 export const generateWeeklyLog = async (user: User) => {
   await checkAndRefreshStravaAuth(user);
   let activities = await fetchRecentActivities(user, 7);
-  let activityToday = false;
+  if (!activities) return "No activities found";
+  const isAnActivityToday = getIsAnActivityToday(activities);
+  activities = filterActivitiesToFormat(activities, isAnActivityToday);
+  const formattedActivities = activities.map(formatActivity);
+
   const totalMileage = Math.round(calcTotalMileage(activities) / 1609);
+
   const activitiesByDay: Record<string, StravaActivity[]> = {
     MondayAM: [],
     TuesdayAM: [],
@@ -87,68 +118,40 @@ export const generateWeeklyLog = async (user: User) => {
     SundayPM: [],
   };
 
-  for (const activity of activities) {
-    const date = new Date(activity.start_date);
-    activity.date = date;
-    // check if activity occurred before or after noon
-    // check if activity occurred today
-    if (date.getDate() === new Date().getDate()) activityToday = true;
+  formattedActivities.forEach((activity: StravaActivity) => {
+    const isAM = activity.date.getHours() < 12;
+    const timeOfDay = isAM ? "AM" : "PM";
+    const dayOfWeek = weekdays[activity.date.getDay()];
 
-    activity.day = date.getDay();
-    // console.log(activity.day, weekday[activity.day]);
-    activitiesByDay[
-      `${weekdays[activity.day]}${date.getHours() < 12 ? "AM" : "PM"}`
-    ].push({
-      ...activity,
-      distance: activity.distance / 1609,
-      duration: activity.moving_time / 60,
-      average_speed: 26.8224 / activity.average_speed,
-      formattedPace: formatPace(26.8224 / activity.average_speed),
-    });
-  }
+    activitiesByDay[`${dayOfWeek}${timeOfDay}`].push(activity);
+  });
 
   const weeklyLog = [];
-  const orderOfDays = getOrderOfDays(activityToday);
+
+  const orderOfDays = getOrderOfDays(isAnActivityToday);
+
   for (const day of orderOfDays) {
     const weekday = weekdays[day];
     const amActivities = activitiesByDay[`${weekday}AM`];
     const pmActivities = activitiesByDay[`${weekday}PM`];
     const doubleDay = amActivities.length > 0 && pmActivities.length > 0;
     let activityString = `${weekday} - `;
+
     if (doubleDay) {
       weeklyLog.push(
         `${activityString}AM: ${generateActivityString(
-          activitiesByDay[`${weekday}AM`]
-        )}, PM: ${generateActivityString(activitiesByDay[`${weekday}PM`])}`
+          amActivities
+        )}, PM: ${generateActivityString(pmActivities)}`
       );
     } else if (activitiesByDay[`${weekday}AM`].length > 0) {
-      weeklyLog.push(
-        `${weekday} - ${generateActivityString(
-          activitiesByDay[`${weekday}AM`]
-        )}`
-      );
-    } else if (activitiesByDay[`${weekday}PM`].length > 0) {
-      weeklyLog.push(
-        `${weekday} - ${generateActivityString(
-          activitiesByDay[`${weekday}PM`]
-        )}`
-      );
+      weeklyLog.push(`${weekday} - ${generateActivityString(amActivities)}`);
+    } else if (pmActivities.length > 0) {
+      weeklyLog.push(`${weekday} - ${generateActivityString(pmActivities)}`);
     } else {
       weeklyLog.push(`${weekday} - Off`);
     }
   }
+
   weeklyLog.push(`\nTotal: ${Math.round(totalMileage)}mi.`);
   return weeklyLog.join("\n");
-};
-
-const getOrderOfDays = (activityToday: boolean): number[] => {
-  let initialDay = new Date().getDay();
-  if (activityToday) {
-    ++initialDay;
-  }
-  const orderOfDays = [];
-  for (let i = 0; i < 7; i++) {
-    orderOfDays.push((i + initialDay) % 7);
-  }
-  return orderOfDays;
 };

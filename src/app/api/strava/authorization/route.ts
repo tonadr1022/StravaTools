@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
-import prisma from "../../../../../prisma/db";
-
+// import prisma from "../../../../../prisma/db";
+import { prisma } from "../../../../../prisma/db";
 export async function GET(req: NextRequest) {
   const client_id = process.env.NEXT_PUBLIC_STRAVA_CLIENT_ID!;
   const client_secret = process.env.STRAVA_CLIENT_SECRET!;
