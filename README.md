@@ -15,7 +15,8 @@ You can use it live at [strava-tools.vercel.app](https://strava-tools.vercel.app
 - Supabase relational database with Prisma ORM allowing API routes in the App Directory to perform CRUD operations
 
 ## Demo
-https://github.com/tonadr1022/StravaTools/assets/126039668/efa4da14-7f64-412d-ac90-ae4a26c0b429
+https://github.com/tonadr1022/StravaTools/assets/126039668/e1b8bcf1-781b-4faa-b3c2-6315c658ac03
+
 
 ## What's Next
 - Other tools, including CSV/JSON generation, data visualizations
