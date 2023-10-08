@@ -24,3 +24,13 @@ export const getMidnightToday = () => {
   );
   return midnight;
 };
+
+export const getDateRangeString = (startDate: Date, endDate: Date) => {
+  return `${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`;
+};
+
+export const getSubjectDateRangeString = () => {
+  const startDate = subtractDays(new Date(), 7);
+  const endDate = new Date();
+  return getDateRangeString(startDate, endDate);
+};

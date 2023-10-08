@@ -8,7 +8,9 @@ type Props = {
 
 const AuthStravaButton = ({ user_id }: Props) => {
   return (
-    <button className="btn" onClick={() => handleAuthRedirect(user_id)}>
+    <button
+      className="btn btn-outline btn-accent w-1/2 self-center"
+      onClick={() => handleAuthRedirect(user_id)}>
       Authorize Strava
     </button>
   );

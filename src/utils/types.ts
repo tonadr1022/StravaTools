@@ -19,6 +19,6 @@ export type SettingsFields = {
   emailRecipients: string[];
   emailSubject: string;
   includeDateInSubject: boolean;
-  decimalsToRoundMiles: number;
-  mileageRoundThreshold: number;
+  digitsToRound: number;
+  mileageRoundThreshold: string;
 };

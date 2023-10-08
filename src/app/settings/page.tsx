@@ -12,26 +12,11 @@ export default async function Settings() {
     where: { userId: session.user.id },
   });
   if (!settings) redirect("/");
-  const {
-    id,
-    emailRecipients,
-    emailSubject,
-    includeDateInSubject,
-    decimalsToRoundMiles,
-    mileageRoundThreshold,
-  } = settings;
-  const settingsFields: SettingsFields = {
-    id,
-    emailRecipients,
-    emailSubject,
-    includeDateInSubject,
-    decimalsToRoundMiles,
-    mileageRoundThreshold: mileageRoundThreshold.toNumber(),
-  };
+
   return (
     <main className="bg-base-300 p-24 pt-32 min-h-screen flex flex-col items-center">
-      <h1 className="text-4xl md:text-5xl mb-8">Settings</h1>
-      <SettingsOptions settings={settingsFields} />
+      <h1 className="text-4xl md:text-5xl mb-4">Settings</h1>
+      <SettingsOptions settings={settings} />
     </main>
   );
 }

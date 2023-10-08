@@ -68,6 +68,6 @@ model Settings {
   emailRecipients       String[]
   emailSubject          String
   includeDateInSubject  Boolean
-  decimalsToRoundMiles  Int      @default(0)
-  mileageRoundThreshold Decimal  @default(0.5)
+  digitsToRound         Int      @default(0)
+  mileageRoundThreshold String   @default("0.5")
 }

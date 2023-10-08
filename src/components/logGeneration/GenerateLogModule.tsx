@@ -2,34 +2,34 @@
 import React, { useState } from "react";
 import Button from "../common/Button";
 import { generateWeeklyLog } from "@/strava/GenerateWeeklyLog";
-import { User } from "@prisma/client";
-import { subtractDays } from "@/utils/dateTimeUtils";
+import { Settings, User } from "@prisma/client";
+import { getSubjectDateRangeString, subtractDays } from "@/utils/dateTimeUtils";
 import { ImCancelCircle } from "react-icons/im";
 import { AiOutlineCopy, AiOutlineMail } from "react-icons/ai";
 type Props = {
   user: User;
+  settings: Settings;
 };
 
-const GenerateLogModule = ({ user }: Props) => {
-  const subject = `Adriansen Training Log - ${subtractDays(
-    new Date(),
-    7
-  ).toLocaleDateString()} to ${new Date().toLocaleDateString()}`;
+const GenerateLogModule = ({ user, settings }: Props) => {
+  const { emailSubject, emailRecipients, includeDateInSubject, digitsToRound } =
+    settings;
 
   const [log, setLog] = useState<string>("");
   const [logLoading, setLogLoading] = useState<boolean>(false);
   const handleLogGeneration = async () => {
     setLogLoading(true);
-    const activities = await generateWeeklyLog(user);
+    const activities = await generateWeeklyLog(user, digitsToRound);
     setLog(activities);
     setLogLoading(false);
   };
+
   const sendEmail = () => {
-    let body = log + "\n\nThanks,\nTony";
-    // body = body.replace("\n", "%0D%0A");
-    console.log(body);
-    document.location.href = `mailto:MGB@athletics.wisc.edu,AAW@athletics.wisc.edu?subject=${encodeURIComponent(
-      subject
+    // let body = log + "\n\nThanks,\nTony";
+    let body = log;
+    const emailRecipientsString = emailRecipients.join(",");
+    document.location.href = `mailto:${emailRecipientsString}?subject=${encodeURIComponent(
+      emailSubject + includeDateInSubject && getSubjectDateRangeString()
     )}&body=${encodeURIComponent(body)}`;
   };
 

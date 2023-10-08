@@ -21,7 +21,7 @@ export const checkAndRefreshStravaAuth = async (user: User) => {
     !user.stravaExpiresAt ||
     !user.stravaRefreshToken
   )
-    throw new Error("User not authorized with Strava");
+    return;
   // console.log(
   //   user.stravaExpiresAt,
   //   new Date(user.stravaExpiresAt * 1000),

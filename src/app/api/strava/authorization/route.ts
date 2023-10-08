@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 // import prisma from "../../../../../prisma/db";
 import { prisma } from "../../../../../prisma/db";
+import { redirect } from "next/navigation";
 export async function GET(req: NextRequest) {
   const client_id = process.env.NEXT_PUBLIC_STRAVA_CLIENT_ID!;
   const client_secret = process.env.STRAVA_CLIENT_SECRET!;
@@ -38,14 +39,11 @@ export async function GET(req: NextRequest) {
       stravaExpiresAt: expires_at,
     },
   });
-  console.log({ user });
-  const athleteResponse = await fetch(`https://www.strava.com/api/v3/athlete`, {
-    headers: {
-      Authorization: `Bearer ${authData.access_token}`,
-    },
-  });
-  const athleteJSON = await athleteResponse.json();
-  return Response.json(athleteJSON);
+  // console.log({ user });
+  redirect("/");
+  // if (athleteResponse.ok)
+  // const athleteJSON = await athleteResponse.json();
+  // return Response.json(athleteJSON);
 
   // console.log({ authData });
 }

@@ -26,8 +26,8 @@ export const authOptions = {
             emailRecipients: [],
             emailSubject: `${lastName} Training Log - `,
             includeDateInSubject: true,
-            decimalsToRoundMiles: 0,
-            mileageRoundThreshold: 0.5,
+            digitsToRound: 0,
+            mileageRoundThreshold: "0.5",
           },
         });
       }

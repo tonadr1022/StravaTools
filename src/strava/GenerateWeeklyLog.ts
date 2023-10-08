@@ -1,4 +1,4 @@
-import { User } from "@prisma/client";
+import { Settings, User } from "@prisma/client";
 import { fetchRecentActivities } from "./fetchActivities";
 import { formatPace } from "./formatUtils";
 // import { checkAndRefreshStravaAuth } from "./AuthFunctions";
@@ -15,29 +15,39 @@ const weekdays: Record<number, string> = {
   6: "Saturday",
 };
 
-const generateActivityString = (activities: StravaActivity[]): string => {
+const generateActivityString = (
+  activities: StravaActivity[],
+  digitsToRound: number,
+  roundUpThreshold: number
+): string => {
   if (activities.length === 0) return "Off";
   if (activities.length === 1) {
     const activity = activities[0];
-    let ret = `${Math.round(activity.distance)}mi`;
+    let ret = `${roundMileage(
+      activity.distance,
+      digitsToRound,
+      roundUpThreshold
+    )}mi`;
     if (activity?.formattedPace) {
       ret += ` @${activity.formattedPace}/mi`;
     }
     return ret;
   } else {
-    const totalDistance = calcTotalMileage(activities);
+    const totalDistance = calcTotalDistance(activities);
     const totalDuration = activities.reduce(
       (acc, curr) => acc + curr.duration,
       0
     );
     const averagePace = totalDuration / totalDistance;
-    return `${Math.round(totalDistance)} total mi @${formatPace(
-      averagePace
-    )}/mi`;
+    return `${roundMileage(
+      totalDistance,
+      digitsToRound,
+      roundUpThreshold
+    )} total mi @${formatPace(averagePace)}/mi`;
   }
 };
 
-const calcTotalMileage = (activities: StravaActivity[]): number => {
+const calcTotalDistance = (activities: StravaActivity[]): number => {
   return activities.reduce((acc, curr) => acc + curr.distance, 0);
 };
 
@@ -57,6 +67,7 @@ const filterActivitiesToFormat = (
   );
 
   const dateSevenDaysAgo = subtractDays(new Date(), 7).getDate();
+
   // if an activity occurred today, filter out the activities
   // that occurred on the same day last week
   if (activityToday) {
@@ -91,15 +102,35 @@ const getOrderOfDays = (isAnActivityToday: boolean): number[] => {
   return orderOfDays;
 };
 
-export const generateWeeklyLog = async (user: User) => {
-  // await checkAndRefreshStravaAuth(user);
+const roundMileage = (
+  mileage: number,
+  digitsToRound: number,
+  roundUpThreshold: number
+) => {
+  if (mileage % 1 > roundUpThreshold) {
+    return Math.ceil(mileage * 10 ** digitsToRound) / 10 ** digitsToRound;
+  } else {
+    return Math.floor(mileage * 10 ** digitsToRound) / 10 ** digitsToRound;
+  }
+};
+
+export const generateWeeklyLog = async (
+  user: User,
+  digitsToRound: number,
+  roundUpThreshold: number
+) => {
+  console.log(digitsToRound, "digs2");
   let activities = await fetchRecentActivities(user, 7);
   if (!activities) return "No activities found";
   const isAnActivityToday = getIsAnActivityToday(activities);
   activities = filterActivitiesToFormat(activities, isAnActivityToday);
   const formattedActivities = activities.map(formatActivity);
 
-  const totalMileage = Math.round(calcTotalMileage(activities) / 1609);
+  const totalMileage = roundMileage(
+    calcTotalDistance(activities) / 1609,
+    digitsToRound,
+    roundUpThreshold
+  );
 
   const activitiesByDay: Record<string, StravaActivity[]> = {
     MondayAM: [],
@@ -140,18 +171,36 @@ export const generateWeeklyLog = async (user: User) => {
     if (doubleDay) {
       weeklyLog.push(
         `${activityString}AM: ${generateActivityString(
-          amActivities
-        )}, PM: ${generateActivityString(pmActivities)}`
+          amActivities,
+          digitsToRound,
+          roundUpThreshold
+        )}, PM: ${generateActivityString(
+          pmActivities,
+          digitsToRound,
+          roundUpThreshold
+        )}`
       );
     } else if (activitiesByDay[`${weekday}AM`].length > 0) {
-      weeklyLog.push(`${weekday} - ${generateActivityString(amActivities)}`);
+      weeklyLog.push(
+        `${weekday} - ${generateActivityString(
+          amActivities,
+          digitsToRound,
+          roundUpThreshold
+        )}`
+      );
     } else if (pmActivities.length > 0) {
-      weeklyLog.push(`${weekday} - ${generateActivityString(pmActivities)}`);
+      weeklyLog.push(
+        `${weekday} - ${generateActivityString(
+          pmActivities,
+          digitsToRound,
+          roundUpThreshold
+        )}`
+      );
     } else {
       weeklyLog.push(`${weekday} - Off`);
     }
   }
 
-  weeklyLog.push(`\nTotal: ${Math.round(totalMileage)}mi.`);
+  weeklyLog.push(`\nTotal: ${totalMileage}mi.`);
   return weeklyLog.join("\n");
 };
