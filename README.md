@@ -3,7 +3,7 @@ I built this app with the initial intention of streamlining my training log writ
 You can use it live at [strava-tools.vercel.app](https://strava-tools.vercel.app/)
 
 ## What it Does
-- Weekly Training Log text and email generator from Strava activities
+- Weekly Training Log text and email generator from Strava activities using the Strava API
 - Customizable email inputs including recipients, subject line, signature
 - Customizable rounding and round-up thresholds
 - Download Strava activities to JSON or CSV
@@ -19,6 +19,7 @@ https://github.com/tonadr1022/StravaTools/assets/126039668/e1b8bcf1-781b-4faa-b3
 
 
 ## What's Next
+- Use of Strava private notes to populate run descriptions
 - Other tools, including CSV/JSON generation, data visualizations
 - More customizability
 - Bug fixes, particularly with server-side rendering issues
