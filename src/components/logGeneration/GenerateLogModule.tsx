@@ -27,8 +27,8 @@ const GenerateLogModule = ({ user, settings }: Props) => {
     // let body = log + "\n\nThanks,\nTony";
     let body = log;
     const emailRecipientsString = emailRecipients.join(",");
-    const fullSubject = `${emailSubject}${
-      includeDateInSubject ? getSubjectDateRangeString() : ""
+    const fullSubject = `${emailSubject.trim()}${
+      includeDateInSubject ? ` ${getSubjectDateRangeString()}` : ""
     }`;
     document.location.href = `mailto:${emailRecipientsString}?subject=${encodeURIComponent(
       fullSubject
