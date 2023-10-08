@@ -24,3 +24,23 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+export async function GET(req: NextRequest) {
+  try {
+    const userId = req.nextUrl.searchParams.get("userId");
+    if (!userId) {
+      return Response.json({ error: "Missing userId" }, { status: 400 });
+    }
+
+    const settings = await prisma.settings.findUnique({
+      where: { userId: userId },
+    });
+
+    return Response.json(settings, { status: 200 });
+  } catch (error) {
+    return Response.json(
+      { error: "Failed to fetch settings" },
+      { status: 500 }
+    );
+  }
+}

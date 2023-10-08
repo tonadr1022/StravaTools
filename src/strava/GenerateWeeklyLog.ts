@@ -1,9 +1,10 @@
-import { Settings, User } from "@prisma/client";
+import { User } from "@prisma/client";
 import { fetchRecentActivities } from "./fetchActivities";
 import { formatPace } from "./formatUtils";
 // import { checkAndRefreshStravaAuth } from "./AuthFunctions";
 import { StravaActivity, StravaActivityRaw } from "@/utils/types";
 import { subtractDays } from "@/utils/dateTimeUtils";
+import { fetchSettings } from "@/clientApi/settingsApi";
 
 const weekdays: Record<number, string> = {
   0: "Sunday",
@@ -18,7 +19,7 @@ const weekdays: Record<number, string> = {
 const generateActivityString = (
   activities: StravaActivity[],
   digitsToRound: number,
-  roundUpThreshold: number
+  mileageRoundThreshold: number
 ): string => {
   if (activities.length === 0) return "Off";
   if (activities.length === 1) {
@@ -26,14 +27,18 @@ const generateActivityString = (
     let ret = `${roundMileage(
       activity.distance,
       digitsToRound,
-      roundUpThreshold
+      mileageRoundThreshold
     )}mi`;
     if (activity?.formattedPace) {
       ret += ` @${activity.formattedPace}/mi`;
     }
     return ret;
   } else {
-    const totalDistance = calcTotalDistance(activities);
+    const totalDistance = calcTotalDistanceMiles(
+      activities,
+      digitsToRound,
+      mileageRoundThreshold
+    );
     const totalDuration = activities.reduce(
       (acc, curr) => acc + curr.duration,
       0
@@ -42,13 +47,22 @@ const generateActivityString = (
     return `${roundMileage(
       totalDistance,
       digitsToRound,
-      roundUpThreshold
+      mileageRoundThreshold
     )} total mi @${formatPace(averagePace)}/mi`;
   }
 };
 
-const calcTotalDistance = (activities: StravaActivity[]): number => {
-  return activities.reduce((acc, curr) => acc + curr.distance, 0);
+const calcTotalDistanceMiles = (
+  activities: StravaActivity[],
+  digitsToRound: number,
+  mileageRoundThreshold: number
+): number => {
+  return activities.reduce((acc, curr) => {
+    return (
+      acc +
+      roundMileage(curr.distance / 1609, digitsToRound, mileageRoundThreshold)
+    );
+  }, 0);
 };
 
 const getIsAnActivityToday = (activities: StravaActivity[]) => {
@@ -105,30 +119,32 @@ const getOrderOfDays = (isAnActivityToday: boolean): number[] => {
 const roundMileage = (
   mileage: number,
   digitsToRound: number,
-  roundUpThreshold: number
+  mileageRoundThreshold: number
 ) => {
-  if (mileage % 1 > roundUpThreshold) {
+  if (mileage % 1 > mileageRoundThreshold) {
     return Math.ceil(mileage * 10 ** digitsToRound) / 10 ** digitsToRound;
   } else {
     return Math.floor(mileage * 10 ** digitsToRound) / 10 ** digitsToRound;
   }
 };
 
-export const generateWeeklyLog = async (
-  user: User,
-  digitsToRound: number,
-  roundUpThreshold: number
-) => {
-  let activities = await fetchRecentActivities(user, 7);
+export const generateWeeklyLog = async (user: User) => {
+  let [activities, settings] = await Promise.all([
+    fetchRecentActivities(user, 7),
+    fetchSettings(user.id),
+  ]);
   if (!activities) return "No activities found";
+  if (!settings) return "No settings found";
+  const digitsToRound = settings.digitsToRound;
+  const mileageRoundThreshold = Number(settings.mileageRoundThreshold);
   const isAnActivityToday = getIsAnActivityToday(activities);
   activities = filterActivitiesToFormat(activities, isAnActivityToday);
   const formattedActivities = activities.map(formatActivity);
 
   const totalMileage = roundMileage(
-    calcTotalDistance(activities) / 1609,
+    calcTotalDistanceMiles(activities, digitsToRound, mileageRoundThreshold),
     digitsToRound,
-    roundUpThreshold
+    mileageRoundThreshold
   );
 
   const activitiesByDay: Record<string, StravaActivity[]> = {
@@ -172,11 +188,11 @@ export const generateWeeklyLog = async (
         `${activityString}AM: ${generateActivityString(
           amActivities,
           digitsToRound,
-          roundUpThreshold
+          mileageRoundThreshold
         )}, PM: ${generateActivityString(
           pmActivities,
           digitsToRound,
-          roundUpThreshold
+          mileageRoundThreshold
         )}`
       );
     } else if (activitiesByDay[`${weekday}AM`].length > 0) {
@@ -184,7 +200,7 @@ export const generateWeeklyLog = async (
         `${weekday} - ${generateActivityString(
           amActivities,
           digitsToRound,
-          roundUpThreshold
+          mileageRoundThreshold
         )}`
       );
     } else if (pmActivities.length > 0) {
@@ -192,7 +208,7 @@ export const generateWeeklyLog = async (
         `${weekday} - ${generateActivityString(
           pmActivities,
           digitsToRound,
-          roundUpThreshold
+          mileageRoundThreshold
         )}`
       );
     } else {
