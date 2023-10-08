@@ -26,10 +26,14 @@ export const getMidnightToday = () => {
 };
 
 export const getDateRangeString = (startDate: Date, endDate: Date) => {
-  return `${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`;
+  return `${startDate
+    .toLocaleDateString()
+    .split("/")
+    .slice(0, 2)
+    .join("/")} - ${endDate.toLocaleDateString()}`;
 };
 
-export const getSubjectDateRangeString = () => {
+export const getSubjectDateRangeString = (): string => {
   const startDate = subtractDays(new Date(), 7);
   const endDate = new Date();
   return getDateRangeString(startDate, endDate);

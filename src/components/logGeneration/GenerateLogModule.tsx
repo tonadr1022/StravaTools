@@ -12,14 +12,23 @@ type Props = {
 };
 
 const GenerateLogModule = ({ user, settings }: Props) => {
-  const { emailSubject, emailRecipients, includeDateInSubject, digitsToRound } =
-    settings;
+  const {
+    emailSubject,
+    emailRecipients,
+    includeDateInSubject,
+    digitsToRound,
+    mileageRoundThreshold,
+  } = settings;
 
   const [log, setLog] = useState<string>("");
   const [logLoading, setLogLoading] = useState<boolean>(false);
   const handleLogGeneration = async () => {
     setLogLoading(true);
-    const activities = await generateWeeklyLog(user, digitsToRound);
+    const activities = await generateWeeklyLog(
+      user,
+      digitsToRound,
+      Number(mileageRoundThreshold)
+    );
     setLog(activities);
     setLogLoading(false);
   };
@@ -28,8 +37,11 @@ const GenerateLogModule = ({ user, settings }: Props) => {
     // let body = log + "\n\nThanks,\nTony";
     let body = log;
     const emailRecipientsString = emailRecipients.join(",");
+    const fullSubject = `${emailSubject}${
+      includeDateInSubject ? getSubjectDateRangeString() : ""
+    }`;
     document.location.href = `mailto:${emailRecipientsString}?subject=${encodeURIComponent(
-      emailSubject + includeDateInSubject && getSubjectDateRangeString()
+      fullSubject
     )}&body=${encodeURIComponent(body)}`;
   };
 
@@ -41,6 +53,7 @@ const GenerateLogModule = ({ user, settings }: Props) => {
   const handleClear = () => {
     setLog("");
   };
+
   return (
     <>
       <Button

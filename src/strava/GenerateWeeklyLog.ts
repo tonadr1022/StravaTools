@@ -119,7 +119,6 @@ export const generateWeeklyLog = async (
   digitsToRound: number,
   roundUpThreshold: number
 ) => {
-  console.log(digitsToRound, "digs2");
   let activities = await fetchRecentActivities(user, 7);
   if (!activities) return "No activities found";
   const isAnActivityToday = getIsAnActivityToday(activities);
