@@ -13,6 +13,9 @@ I built this app with the initial intention of streamlining my training log writ
 - NextAuth for Google account authentication
 - Supabase relational database with Prisma ORM allowing API routes in the App Directory to perform CRUD operations
 
+## Demo
+https://github.com/tonadr1022/StravaTools/assets/126039668/efa4da14-7f64-412d-ac90-ae4a26c0b429
+
 ## What's Next
 - Other tools, including CSV/JSON generation, data visualizations
 - More customizability
