@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "../../../../../prisma/db";
 import { redirect } from "next/navigation";
 export async function GET(req: NextRequest) {
+  console.log("auth callback");
   const client_id = process.env.NEXT_PUBLIC_STRAVA_CLIENT_ID!;
   const client_secret = process.env.STRAVA_CLIENT_SECRET!;
   const params = req.nextUrl.searchParams;

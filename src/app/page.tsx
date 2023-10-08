@@ -6,6 +6,7 @@ import { prisma } from "../../prisma/db";
 import { checkAndRefreshStravaAuth } from "@/strava/AuthFunctions";
 import GenerateLogModule from "@/components/logGeneration/GenerateLogModule";
 import StravaButton from "@/components/common/StravaButton";
+import GenerateCsv from "@/components/fileGeneration/GenerateCsv";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -51,9 +52,7 @@ export default async function Home() {
         ) : (
           <div className="flex flex-col gap-6 items-center">
             <GenerateLogModule user={user!} settings={settings!} />
-            <button className="btn btn-outline btn-accent w-56">
-              Generate Activities CSV
-            </button>
+            <GenerateCsv user={user} />
             <StravaButton />
             {/* <button className="btn">View Maps</button> */}
           </div>

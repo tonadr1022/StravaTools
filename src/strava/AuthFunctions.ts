@@ -1,6 +1,6 @@
 import { User } from "@prisma/client";
-// import prisma from "../../prisma/db";
 import { prisma } from "../../prisma/db";
+
 export const handleAuthRedirect = (user_id: string) => {
   const params = new URLSearchParams({
     client_id: process.env.NEXT_PUBLIC_STRAVA_CLIENT_ID as string,

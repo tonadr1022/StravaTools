@@ -11,6 +11,7 @@ export const getTimeAfterString = (numDays: number) => {
     ).getTime() / 1000
   );
 };
+
 export const getMidnightToday = () => {
   const now = new Date();
   const midnight = new Date(

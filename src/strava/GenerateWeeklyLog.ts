@@ -1,6 +1,6 @@
 import { User } from "@prisma/client";
-import { fetchRecentActivities } from "./fetchActivities";
-import { formatPace } from "./formatUtils";
+import { fetchActivities } from "./fetchActivities";
+import { formatPace } from "../utils/formatUtils";
 // import { checkAndRefreshStravaAuth } from "./AuthFunctions";
 import { StravaActivity, StravaActivityRaw } from "@/utils/types";
 import { subtractDays } from "@/utils/dateTimeUtils";
@@ -130,7 +130,7 @@ const roundMileage = (
 
 export const generateWeeklyLog = async (user: User) => {
   let [activities, settings] = await Promise.all([
-    fetchRecentActivities(user, 7),
+    fetchActivities(user, 7),
     fetchSettings(user.id),
   ]);
   if (!activities) return "No activities found";
