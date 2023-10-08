@@ -6,6 +6,7 @@ import { Settings, User } from "@prisma/client";
 import { getSubjectDateRangeString, subtractDays } from "@/utils/dateTimeUtils";
 import { ImCancelCircle } from "react-icons/im";
 import { AiOutlineCopy, AiOutlineMail } from "react-icons/ai";
+import toast, { Toaster } from "react-hot-toast";
 type Props = {
   user: User;
   settings: Settings;
@@ -38,6 +39,7 @@ const GenerateLogModule = ({ user, settings }: Props) => {
   const handleCopy = () => {
     if (log === "") return;
     navigator.clipboard.writeText(log);
+    toast.success("Copied to clipboard");
   };
 
   const handleClear = () => {
@@ -46,6 +48,7 @@ const GenerateLogModule = ({ user, settings }: Props) => {
 
   return (
     <>
+      <Toaster />
       <Button
         className="btn-outline btn-accent w-56"
         onClick={handleLogGeneration}>
