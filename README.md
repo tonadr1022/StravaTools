@@ -1,5 +1,6 @@
 # Strava Tools
 I built this app with the initial intention of streamlining my training log writing process as a member of the Wisconsin Badgers cross country and track teams.
+You can use it live at [strava-tools.vercel.app](https://strava-tools.vercel.app/)
 
 ## What it Does
 - Weekly Training Log text and email generator from Strava activities
