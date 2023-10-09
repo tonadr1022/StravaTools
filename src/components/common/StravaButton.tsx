@@ -1,16 +1,16 @@
 "use client";
 import Image from "next/image";
 import Button from "./Button";
+import Link from "next/link";
 
 type Props = {};
 
 const StravaButton = (props: Props) => {
   return (
-    <Button
-      onClick={() =>
-        (window.location.href = "https://www.strava.com/dashboard")
-      }
-      className="btn-outline w-56">
+    <Link
+      href={"https://www.strava.com/dashboard"}
+      target="_blank"
+      className="btn btn-outline w-56">
       Strava
       <Image
         src="/strava_logo_2.svg"
@@ -18,7 +18,7 @@ const StravaButton = (props: Props) => {
         width={24}
         height={24}
       />
-    </Button>
+    </Link>
   );
 };
 

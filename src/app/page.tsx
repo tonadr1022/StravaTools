@@ -7,6 +7,7 @@ import { checkAndRefreshStravaAuth } from "@/strava/AuthFunctions";
 import GenerateLogModule from "@/components/logGeneration/GenerateLogModule";
 import StravaButton from "@/components/common/StravaButton";
 import GenerateCsv from "@/components/fileGeneration/GenerateCsv";
+import GenerateJson from "@/components/fileGeneration/GenerateJson";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -53,6 +54,7 @@ export default async function Home() {
           <div className="flex flex-col gap-6 items-center">
             <GenerateLogModule user={user!} settings={settings!} />
             <GenerateCsv user={user} />
+            <GenerateJson user={user} />
             <StravaButton />
             {/* <button className="btn">View Maps</button> */}
           </div>

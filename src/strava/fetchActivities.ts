@@ -26,12 +26,13 @@ export const fetchActivities = async (user: User, numDaysBack?: number) => {
   return activities;
 };
 
-export const fetchAllActivities = async (user: User) => {
+export const fetchAllActivities = async (access_token: string) => {
   try {
     let page = 1;
     const perPage = 200;
     const activities: StravaActivityRaw[] = [];
     while (true) {
+      console.log({ page });
       const params = new URLSearchParams();
       params.append("page", page.toString());
       params.append("per_page", perPage.toString());
@@ -40,7 +41,7 @@ export const fetchAllActivities = async (user: User) => {
         "https://www.strava.com/api/v3/athlete/activities?" + params,
         {
           headers: {
-            Authorization: `Bearer ${user.stravaAccessToken}`,
+            Authorization: `Bearer ${access_token}`,
           },
         }
       );
@@ -51,12 +52,16 @@ export const fetchAllActivities = async (user: User) => {
       }
 
       const currActivities: StravaActivityRaw[] = await response.json();
-      if (!currActivities || currActivities.length === 0) {
+      console.log("curr length", currActivities.length);
+
+      activities.push(...currActivities);
+      if (!currActivities || currActivities.length < perPage) {
         break;
       }
-      activities.push(...currActivities);
+
       page++;
     }
+    return activities;
   } catch (e) {
     console.log(e);
     throw new Error("Failed to fetch activities");
