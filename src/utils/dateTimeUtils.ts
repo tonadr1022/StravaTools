@@ -35,7 +35,7 @@ export const getDateRangeString = (startDate: Date, endDate: Date) => {
 };
 
 export const getSubjectDateRangeString = (): string => {
-  const startDate = subtractDays(new Date(), 7);
+  const startDate = subtractDays(new Date(), 6);
   const endDate = new Date();
   return getDateRangeString(startDate, endDate);
 };

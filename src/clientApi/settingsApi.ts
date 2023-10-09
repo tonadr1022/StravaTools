@@ -1,7 +1,6 @@
-import { SettingsFields } from "@/utils/types";
 import { Settings } from "@prisma/client";
 
-export const updateSettings = async (settings: Partial<SettingsFields>) => {
+export const updateSettings = async (settings: Partial<Settings>) => {
   console.log(settings, "client update api");
   if (!settings?.id) {
     throw new Error("Missing id");

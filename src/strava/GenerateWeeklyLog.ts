@@ -1,4 +1,4 @@
-import { User } from "@prisma/client";
+import { ActivityType, User } from "@prisma/client";
 import { fetchActivities } from "./fetchActivities";
 import { formatPace } from "../utils/formatUtils";
 // import { checkAndRefreshStravaAuth } from "./AuthFunctions";
@@ -24,14 +24,20 @@ const generateActivityString = (
   if (activities.length === 0) return "Off";
   if (activities.length === 1) {
     const activity = activities[0];
+
     let ret = `${roundMileage(
       activity.distance,
       digitsToRound,
       mileageRoundThreshold
     )}mi`;
-    if (activity?.formattedPace) {
-      ret += ` @${activity.formattedPace}/mi`;
+    if (activity.sport_type === ActivityType.Run) {
+      if (activity?.formattedPace) {
+        ret += ` @${activity.formattedPace}/mi`;
+      }
+    } else {
+      ret = `${Math.round(activity.duration)}min bike, ${ret}`;
     }
+
     return ret;
   } else {
     const totalDistance = calcTotalDistanceMiles(
@@ -53,7 +59,7 @@ const generateActivityString = (
 };
 
 const calcTotalDistanceMiles = (
-  activities: StravaActivity[],
+  activities: StravaActivityRaw[],
   digitsToRound: number,
   mileageRoundThreshold: number
 ): number => {
@@ -65,7 +71,7 @@ const calcTotalDistanceMiles = (
   }, 0);
 };
 
-const getIsAnActivityToday = (activities: StravaActivity[]) => {
+const getIsAnActivityToday = (activities: StravaActivityRaw[]) => {
   return (
     new Date(activities[activities.length - 1].start_date).getDate() ===
     new Date().getDate()
@@ -73,13 +79,14 @@ const getIsAnActivityToday = (activities: StravaActivity[]) => {
 };
 
 const filterActivitiesToFormat = (
-  activities: StravaActivity[],
-  activityToday: boolean
+  activities: StravaActivityRaw[],
+  activityToday: boolean,
+  activityTypes: ActivityType[]
 ) => {
-  activities = activities.filter(
-    (a: StravaActivityRaw) => a.sport_type === "Run"
+  activities = activities.filter((a: StravaActivityRaw) =>
+    activityTypes.includes(a.sport_type as ActivityType)
   );
-
+  if (activities.length === 0) return activities;
   const dateSevenDaysAgo = subtractDays(new Date(), 7).getDate();
 
   // if an activity occurred today, filter out the activities
@@ -109,6 +116,7 @@ const getOrderOfDays = (isAnActivityToday: boolean): number[] => {
   if (isAnActivityToday) {
     ++initialDay;
   }
+
   const orderOfDays = [];
   for (let i = 0; i < 7; i++) {
     orderOfDays.push((i + initialDay) % 7);
@@ -133,19 +141,23 @@ export const generateWeeklyLog = async (user: User) => {
     fetchActivities(user, 7),
     fetchSettings(user.id),
   ]);
-  if (!activities) return "No activities found";
+
+  if (!activities || activities.length === 0) return "No activities found";
   if (!settings) return "No settings found";
-  const digitsToRound = settings.digitsToRound;
+
+  const { activityTypes, digitsToRound } = settings;
   const mileageRoundThreshold = Number(settings.mileageRoundThreshold);
   const isAnActivityToday = getIsAnActivityToday(activities);
-  activities = filterActivitiesToFormat(activities, isAnActivityToday);
-  const formattedActivities = activities.map(formatActivity);
 
-  const totalMileage = roundMileage(
-    calcTotalDistanceMiles(activities, digitsToRound, mileageRoundThreshold),
-    digitsToRound,
-    mileageRoundThreshold
+  activities = filterActivitiesToFormat(
+    activities,
+    isAnActivityToday,
+    activityTypes
   );
+  if (activities.length === 0)
+    return `No activities of types ${activityTypes} found`;
+
+  const formattedActivities = activities.map(formatActivity);
 
   const activitiesByDay: Record<string, StravaActivity[]> = {
     MondayAM: [],
@@ -215,7 +227,42 @@ export const generateWeeklyLog = async (user: User) => {
       weeklyLog.push(`${weekday} - Off`);
     }
   }
+  // calculate total mileage for activities by type
+  let totalMileageString = "\nTotal: ";
+  if (activityTypes.length === 1) {
+    totalMileageString += roundMileage(
+      calcTotalDistanceMiles(activities, digitsToRound, mileageRoundThreshold),
+      digitsToRound,
+      mileageRoundThreshold
+    );
+  } else if (activityTypes.length === 2) {
+    const bikeActivities = activities.filter(
+      (activity) => activity.sport_type === ActivityType.Ride
+    );
+    const runActivities = activities.filter(
+      (activity) => activity.sport_type === ActivityType.Run
+    );
+    const bikeMileage = roundMileage(
+      calcTotalDistanceMiles(
+        bikeActivities,
+        digitsToRound,
+        mileageRoundThreshold
+      ),
+      digitsToRound,
+      mileageRoundThreshold
+    );
+    const runMileage = roundMileage(
+      calcTotalDistanceMiles(
+        runActivities,
+        digitsToRound,
+        mileageRoundThreshold
+      ),
+      digitsToRound,
+      mileageRoundThreshold
+    );
+    totalMileageString += `${bikeMileage}mi bike, ${runMileage}mi run`;
+  }
 
-  weeklyLog.push(`\nTotal: ${totalMileage}mi.`);
+  weeklyLog.push(totalMileageString);
   return weeklyLog.join("\n");
 };

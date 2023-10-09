@@ -21,10 +21,10 @@ const IncludeDateSetting = ({ id, initialIncludeDate }: Props) => {
         id,
         includeDateInSubject: !includeDate,
       });
-      toast.success("include date setting updated");
+      toast.success("include date updated");
     } catch (e) {
       setIncludeDate(!includeDate);
-      toast.error("Failed to update include date setting");
+      toast.error("Failed to update include date");
     }
   };
   return (

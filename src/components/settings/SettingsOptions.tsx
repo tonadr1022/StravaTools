@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import { SettingsFields } from "@/utils/types";
 import EmailRecipientsSetting from "./EmailRecipientsSetting";
 import IncludeDateSetting from "./IncludeDateSetting";
 import { Toaster } from "react-hot-toast";
@@ -8,6 +7,7 @@ import DecimalRoundSetting from "./DecimalRoundSetting";
 import MileageRoundThresholdSetting from "./MileageRoundThresholdSetting";
 import EmailSubjectSetting from "./EmailSubjectSetting";
 import { Settings } from "@prisma/client";
+import ActivityTypes from "./ActivityTypes";
 type Props = {
   settings: Settings;
 };
@@ -20,6 +20,7 @@ const SettingsOptions = ({ settings }: Props) => {
     includeDateInSubject,
     digitsToRound,
     mileageRoundThreshold,
+    activityTypes,
   } = settings;
 
   return (
@@ -37,6 +38,7 @@ const SettingsOptions = ({ settings }: Props) => {
           initialMileageRoundThreshold={mileageRoundThreshold}
         />
         <EmailSubjectSetting id={id} initialEmailSubject={emailSubject} />
+        <ActivityTypes id={id} initialActivityTypes={activityTypes} />
       </div>
     </>
   );

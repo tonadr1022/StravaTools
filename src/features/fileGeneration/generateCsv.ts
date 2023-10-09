@@ -5,8 +5,8 @@ import { User } from "@prisma/client";
 
 export const generateCsv = async (user: User, startTime: number) => {
   const activities: StravaActivityRaw[] = await fetchActivities(
-    user,
-    startTime
+    user
+    // startTime
   );
   if (!activities) return "No activities found";
   console.log(activities);

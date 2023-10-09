@@ -25,10 +25,10 @@ const DecimalRoundSetting = ({ id, initialDecimalsToRound }: Props) => {
         id,
         digitsToRound: newDecimalsToRound,
       });
-      toast.success("Decimals to round setting updated");
+      toast.success("Decimals to round updated");
     } catch (e) {
       setDecimalsToRound(oldDecimalsToRound);
-      toast.error("Failed to update decimals to round setting");
+      toast.error("Failed to update decimals to round");
     }
   };
   // console.log("init,", initialDecimalsToRound);
