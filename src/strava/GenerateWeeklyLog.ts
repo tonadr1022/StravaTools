@@ -15,6 +15,7 @@ const weekdays: Record<number, string> = {
   5: "Friday",
   6: "Saturday",
 };
+const alternateBikeTypes = ["VirtualRide", "EBikeRide"];
 
 const generateActivityString = (
   activities: StravaActivity[],
@@ -25,49 +26,111 @@ const generateActivityString = (
   if (activities.length === 1) {
     const activity = activities[0];
 
-    let ret = `${roundMileage(
-      activity.distance,
-      digitsToRound,
-      mileageRoundThreshold
-    )}mi`;
+    let ret = "";
+
+    // add distance if it exists
+    if (activity.distance) {
+      ret += `${roundMileage(
+        activity.distance,
+        digitsToRound,
+        mileageRoundThreshold
+      )}mi`;
+    }
+
+    // add pace in min/mi if run
     if (activity.sport_type === ActivityType.Run) {
       if (activity?.formattedPace) {
         ret += ` @${activity.formattedPace}/mi`;
       }
+
+      // otherwise add bike duration since its a bike activity
     } else {
       ret = `${Math.round(activity.duration)}min bike, ${ret}`;
     }
 
     return ret;
+
+    // if there are multiple activities, calculate total distance and average pace
   } else {
-    const totalDistance = calcTotalDistanceMiles(
-      activities,
-      digitsToRound,
-      mileageRoundThreshold
+    const runActivities = activities.filter(
+      (a) => a.sport_type === ActivityType.Run
     );
-    const totalDuration = activities.reduce(
-      (acc, curr) => acc + curr.duration,
+    const bikeActivities = activities.filter(
+      (a) =>
+        a.sport_type === ActivityType.Ride ||
+        alternateBikeTypes.includes(a.sport_type)
+    );
+    console.log(runActivities, bikeActivities);
+    const totalRunDistanceRounded = calcTotalDistance(
+      runActivities,
+      digitsToRound,
+      mileageRoundThreshold,
+      true
+    );
+    const totalRunDistance = calcTotalDistance(
+      runActivities,
+      6,
+      mileageRoundThreshold,
+      true,
+      false
+    );
+    const totalBikeDistance = calcTotalDistance(
+      bikeActivities,
+      digitsToRound,
+      mileageRoundThreshold,
+      true
+    );
+    const totalRunDuration = runActivities.reduce(
+      (acc, curr) => curr.duration && acc + curr.duration,
       0
     );
-    const averagePace = totalDuration / totalDistance;
-    return `${roundMileage(
-      totalDistance,
-      digitsToRound,
-      mileageRoundThreshold
-    )} total mi @${formatPace(averagePace)}/mi`;
+    const totalBikeDuration = bikeActivities.reduce(
+      (acc, curr) => curr.duration && acc + curr.duration,
+      0
+    );
+
+    console.log({ activities });
+
+    let ret = "";
+    if (totalRunDistanceRounded > 0) {
+      ret += `${totalRunDistanceRounded}mi`;
+    }
+    if (totalRunDistance > 0 && totalRunDuration > 0) {
+      ret += ` @${formatPace(totalRunDuration / totalRunDistance)}/mi`;
+    }
+    if (totalBikeDistance > 0) {
+      ret += `${totalBikeDistance > 0 ? ", " : ""}${Math.round(
+        totalBikeDuration
+      )}min bike, ${roundMileage(
+        totalBikeDistance,
+        digitsToRound,
+        mileageRoundThreshold
+      )}mi`;
+    }
+    console.log(
+      totalRunDistance,
+      totalRunDuration,
+      totalBikeDistance,
+      totalBikeDuration
+    );
+    console.log({ ret });
+    if (!ret) return "Off";
+    return ret;
   }
 };
 
-const calcTotalDistanceMiles = (
+const calcTotalDistance = (
   activities: StravaActivityRaw[],
   digitsToRound: number,
-  mileageRoundThreshold: number
+  mileageRoundThreshold: number,
+  alreadyInMiles: boolean = false,
+  round: boolean = true
 ): number => {
   return activities.reduce((acc, curr) => {
-    return (
-      acc +
-      roundMileage(curr.distance / 1609, digitsToRound, mileageRoundThreshold)
-    );
+    if (!curr.distance) return acc;
+    const distance = alreadyInMiles ? curr.distance : curr.distance / 1609;
+    if (!round) return acc + distance;
+    return acc + roundMileage(distance, digitsToRound, mileageRoundThreshold);
   }, 0);
 };
 
@@ -83,8 +146,11 @@ const filterActivitiesToFormat = (
   activityToday: boolean,
   activityTypes: ActivityType[]
 ) => {
-  activities = activities.filter((a: StravaActivityRaw) =>
-    activityTypes.includes(a.sport_type as ActivityType)
+  // filter by activity type
+  activities = activities.filter(
+    (a: StravaActivityRaw) =>
+      activityTypes.includes(a.sport_type as ActivityType) ||
+      alternateBikeTypes.includes(a.sport_type)
   );
   if (activities.length === 0) return activities;
   const dateSevenDaysAgo = subtractDays(new Date(), 7).getDate();
@@ -129,7 +195,9 @@ const roundMileage = (
   digitsToRound: number,
   mileageRoundThreshold: number
 ) => {
-  if (mileage % 1 > mileageRoundThreshold) {
+  if (mileage < 0.1) {
+    return 0;
+  } else if (mileage % 1 > mileageRoundThreshold) {
     return Math.ceil(mileage * 10 ** digitsToRound) / 10 ** digitsToRound;
   } else {
     return Math.floor(mileage * 10 ** digitsToRound) / 10 ** digitsToRound;
@@ -230,32 +298,41 @@ export const generateWeeklyLog = async (user: User) => {
   // calculate total mileage for activities by type
   let totalMileageString = "\nTotal: ";
   if (activityTypes.length === 1) {
-    totalMileageString += roundMileage(
-      calcTotalDistanceMiles(activities, digitsToRound, mileageRoundThreshold),
+    totalMileageString += `${roundMileage(
+      calcTotalDistance(
+        activities,
+        digitsToRound,
+        mileageRoundThreshold,
+        false
+      ),
       digitsToRound,
       mileageRoundThreshold
-    );
+    )}mi`;
   } else if (activityTypes.length === 2) {
     const bikeActivities = activities.filter(
-      (activity) => activity.sport_type === ActivityType.Ride
+      (activity) =>
+        activity.sport_type === ActivityType.Ride ||
+        alternateBikeTypes.includes(activity.sport_type)
     );
     const runActivities = activities.filter(
       (activity) => activity.sport_type === ActivityType.Run
     );
     const bikeMileage = roundMileage(
-      calcTotalDistanceMiles(
+      calcTotalDistance(
         bikeActivities,
         digitsToRound,
-        mileageRoundThreshold
+        mileageRoundThreshold,
+        false
       ),
       digitsToRound,
       mileageRoundThreshold
     );
     const runMileage = roundMileage(
-      calcTotalDistanceMiles(
+      calcTotalDistance(
         runActivities,
         digitsToRound,
-        mileageRoundThreshold
+        mileageRoundThreshold,
+        false
       ),
       digitsToRound,
       mileageRoundThreshold
