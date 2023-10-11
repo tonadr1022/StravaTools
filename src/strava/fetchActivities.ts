@@ -2,7 +2,10 @@ import { getTimeAfterString } from "@/utils/dateTimeUtils";
 import { StravaActivityRaw } from "@/utils/types";
 import { User } from "@prisma/client";
 
-export const fetchActivities = async (user: User, numDaysBack?: number) => {
+export const fetchActivities = async (
+  access_token: string,
+  numDaysBack?: number
+) => {
   const params = new URLSearchParams();
 
   numDaysBack &&
@@ -12,7 +15,7 @@ export const fetchActivities = async (user: User, numDaysBack?: number) => {
     "https://www.strava.com/api/v3/athlete/activities?" + params,
     {
       headers: {
-        Authorization: `Bearer ${user.stravaAccessToken}`,
+        Authorization: `Bearer ${access_token}`,
       },
     }
   );

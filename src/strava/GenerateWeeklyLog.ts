@@ -206,7 +206,7 @@ const roundMileage = (
 
 export const generateWeeklyLog = async (user: User) => {
   let [activities, settings] = await Promise.all([
-    fetchActivities(user, 7),
+    fetchActivities(user.stravaAccessToken!, 7),
     fetchSettings(user.id),
   ]);
 

@@ -8,6 +8,7 @@ import GenerateLogModule from "@/components/logGeneration/GenerateLogModule";
 import StravaButton from "@/components/common/StravaButton";
 import GenerateCsv from "@/components/fileGeneration/GenerateCsv";
 import GenerateJson from "@/components/fileGeneration/GenerateJson";
+import MapButton from "@/components/MapButton";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -56,6 +57,7 @@ export default async function Home() {
             <GenerateCsv user={user} />
             <GenerateJson user={user} />
             <StravaButton />
+            <MapButton user={user} />
             {/* <button className="btn">View Maps</button> */}
           </div>
         )}
